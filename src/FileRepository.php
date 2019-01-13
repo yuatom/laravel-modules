@@ -42,6 +42,9 @@ abstract class FileRepository implements RepositoryInterface, Countable
      */
     protected $stubPath;
 
+
+    protected $currentModule = null;
+
     /**
      * The constructor.
      *
@@ -52,6 +55,7 @@ abstract class FileRepository implements RepositoryInterface, Countable
     {
         $this->app = $app;
         $this->path = $path;
+        $this->currentModule = $this->app['request']->segment(1);
     }
 
     /**
@@ -204,7 +208,7 @@ abstract class FileRepository implements RepositoryInterface, Countable
         $modules = [];
 
         foreach ($this->all() as $name => $module) {
-            if ($module->isStatus($status)) {
+            if ($name == ucfirst($this->currentModule) && $module->isStatus($status)) {
                 $modules[$name] = $module;
             }
         }

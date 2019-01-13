@@ -51,6 +51,26 @@ class $CLASS$ extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__.'/../$PATH_CONFIG$/config.php', '$LOWER_NAME$'
         );
+        $this->mergeConfigFrom(
+            __DIR__.'/../$PATH_CONFIG$/database.php', 'database.connections'
+        );
+    }
+
+
+    /**
+     * Register middleware
+     */
+    protected function registerMiddleware()
+    {
+        /**
+         * @var \Illuminate\Routing\Router
+         */
+        $router = $this->app['router'];
+
+        $middlewares = \Config::get('$LOWER_NAME$.middleware');
+        foreach ($middlewares as $name => $middleware) {
+            $router->aliasMiddleware($name, $middleware);
+        }
     }
 
     /**
