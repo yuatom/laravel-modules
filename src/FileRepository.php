@@ -42,8 +42,7 @@ abstract class FileRepository implements RepositoryInterface, Countable
      */
     protected $stubPath;
 
-
-    protected $currentModule = null;
+    protected $requestModule = null;
 
     /**
      * The constructor.
@@ -55,7 +54,7 @@ abstract class FileRepository implements RepositoryInterface, Countable
     {
         $this->app = $app;
         $this->path = $path;
-        $this->currentModule = $this->app['request']->segment(1);
+        !$this->app->runningInConsole() && $this->requestModule = $this->app['request']->segment(1);
     }
 
     /**
@@ -133,7 +132,8 @@ abstract class FileRepository implements RepositoryInterface, Countable
             foreach ($manifests as $manifest) {
                 $name = Json::make($manifest)->get('name');
 
-                $modules[$name] = $this->createModule($this->app, $name, dirname($manifest));
+                // $modules[$name] = $this->createModule($this->app, $name, dirname($manifest));
+                (is_null($this->requestModule) || ucfirst($this->requestModule) == $name) &&                     $modules[$name] = $this->createModule($this->app, $name, dirname($manifest));
             }
         }
 
@@ -181,7 +181,8 @@ abstract class FileRepository implements RepositoryInterface, Countable
      */
     public function getCached()
     {
-        return $this->app['cache']->remember($this->config('cache.key'), $this->config('cache.lifetime'), function () {
+        $cacheKey = $this->config('cache.key') . (is_null($this->requestModule) ? '' : ':'.$this->requestModule);
+        return $this->app['cache']->remember($cacheKey, $this->config('cache.lifetime'), function () {
             return $this->toCollection()->toArray();
         });
     }
@@ -208,7 +209,7 @@ abstract class FileRepository implements RepositoryInterface, Countable
         $modules = [];
 
         foreach ($this->all() as $name => $module) {
-            if ($name == ucfirst($this->currentModule) && $module->isStatus($status)) {
+            if ($module->isStatus($status)) {
                 $modules[$name] = $module;
             }
         }
